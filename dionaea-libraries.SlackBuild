@@ -1,0 +1,285 @@
+#!/bin/sh
+
+# Slackware build script for dionaea dependencies
+# based on the SBo SlackBuild template
+#
+# if you build with lxml, make sure you have python3 installed
+# i recommend getting the SlackBuild from http://slackbuilds.org/
+
+# last modified:	2011 Jan 13
+
+# this script tries to follow the dionaea installation
+# instructions as close as possible, instructions available at:
+# http://dionaea.carnivore.it/#compiling
+
+# all the libraries will be downloaded if necessary
+# this package contains the following libraries:
+#    * libev >=3.80, schmorp.de
+#    * liblcfg, liblcfg.carnivore.it
+#    * libemu, libemu.carnivore.it
+#    * lxml >=2.2.4, codespeak.net
+#    * libudns, corpit.ru
+
+# Written by pyllyukko - http://maimed.org/~pyllyukko/
+
+PRGNAM="dionaea-libraries"
+VERSION=${VERSION:-`date +%Y%m%d`}
+ARCH=${ARCH:-i486}
+BUILD=${BUILD:-1}
+
+LIBEV_VERSION="3.9"
+LIBEV_URLS=(
+  "http://dist.schmorp.de/libev/libev-${LIBEV_VERSION}.tar.gz"
+  "http://dist.schmorp.de/libev/Attic/libev-${LIBEV_VERSION}.tar.gz"
+)
+GOT_LIBEV=0
+UDNS_VERSION="0.1"
+UDNS_URLS=(
+  "http://www.corpit.ru/mjt/udns/udns_${UDNS_VERSION}.tar.gz"
+  "http://www.corpit.ru/mjt/udns/udns-${UDNS_VERSION}.tar.gz"
+  "http://www.corpit.ru/mjt/udns/old/udns_${UDNS_VERSION}.tar.gz"
+  "http://www.corpit.ru/mjt/udns/old/udns-${UDNS_VERSION}.tar.gz"
+)
+GOT_UDNS=0
+LXML_VERSION="2.2.6"
+LXML_URL="http://codespeak.net/lxml/lxml-${LXML_VERSION}.tgz"
+
+# path where python3.1 resides
+# python3.SlackBuild from SBo defaults to /usr/bin
+PYTHON3_PATH="/usr/bin"
+
+# lxml is optional, but recommended
+# 0 = false, 1 = true
+WITH_LXML=1
+# libnl is also optional
+WITH_LIBNL=1
+
+# python3 is only required when you build with lxml
+(( ${WITH_LXML} )) && [ ! -x "${PYTHON3_PATH}/python3.1" ] && {
+  echo "error: \`${PYTHON3_PATH}/python3.1' does not exist, or is not executable!"
+  echo "       if you have python3 installed somewhere else, please change the"	
+  echo "       PYTHON3_PATH variable accordingly."
+  exit 1
+} 1>&2
+
+CWD=$(pwd)
+TMP=${TMP:-/tmp/dionaea}
+PKG=$TMP/package-${PRGNAM}
+OUTPUT=${OUTPUT:-/tmp}	# Drop the package in /tmp
+
+if [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+fi
+
+function print_slack_desc() {
+  local LXML_LINE
+  (( ${WITH_LXML} )) && LXML_LINE="   - lxml (a Pythonic binding for the libxml2 and libxslt)" || LXML_LINE=""
+  cat 0<<-EOF
+	# HOW TO EDIT THIS FILE:
+	# The "handy ruler" below makes it easier to edit a package description.  Line
+	# up the first '|' above the ':' following the base package name, and the '|'
+	# on the right side marks the last column you can put a character in.  You must
+	# make exactly 11 lines for the formatting to be correct.  It's also
+	# customary to leave one space after the ':' except on otherwise blank lines.
+
+	                 |-ruler------------------------------------------------------|
+	dionaea-libraries: dionaea-libraries (dionaea dependencies)
+	dionaea-libraries:
+	dionaea-libraries: this package includes the following libraries:
+	dionaea-libraries:   - liblcfg (lightweight configuration file library)
+	dionaea-libraries:   - libev (high-performance event loop/event model)
+	dionaea-libraries:   - libudns (stub DNS resolver library)
+	dionaea-libraries:   - libemu (library for basic x86 emulation)
+	dionaea-libraries:${LXML_LINE}
+	dionaea-libraries:
+	dionaea-libraries: http://dionaea.carnivore.it/
+	dionaea-libraries:
+EOF
+  return 0
+} # print_slack-desc()
+
+set -e # Exit on most errors
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+pushd "${TMP}"
+rm -rf "${PRGNAM}-${VERSION}"
+
+# liblcfg
+rm -rf liblcfg
+git clone git://git.carnivore.it/liblcfg.git liblcfg
+pushd "liblcfg/code"
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+autoreconf -vi
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/opt/dionaea \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+popd
+
+# libev
+rm -rf "libev-${LIBEV_VERSION}"
+[ ! -f "${CWD}/libev-${LIBEV_VERSION}.tar.gz" ] && {
+  pushd "${CWD}"
+  set +e
+  for LIBEV_URL in ${LIBEV_URLS[*]}
+  do
+    wget "${LIBEV_URL}" 
+    [ ${?} -eq 0 ] && {
+      GOT_LIBEV=1
+      break
+    }
+  done
+  set -e
+  popd
+  (( ! ${GOT_LIBEV} )) && {
+    echo "error: failed to download libev!" 1>&2
+    exit 1
+  }
+}
+tar xvf "${CWD}/libev-${LIBEV_VERSION}.tar.gz"
+pushd "libev-${LIBEV_VERSION}"
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+autoreconf -vi
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/opt/dionaea \
+  --mandir=/usr/man \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+popd
+
+# libudns
+rm -rf "udns-${UDNS_VERSION}"
+[ ! -f "$CWD/udns_${UDNS_VERSION}.tar.gz" -a \
+  ! -f "$CWD/udns-${UDNS_VERSION}.tar.gz" ] && {
+  pushd "${CWD}"
+  set +e
+  for UDNS_URL in ${UDNS_URLS[*]}
+  do
+    wget "${UDNS_URL}"
+    [ ${?} -eq 0 ] && {
+      #UDNS_TARGZ="${UDNS_URL##*/}"
+      GOT_UDNS=1
+      break
+    }
+  done
+  set -e
+  popd
+  (( ! ${GOT_UDNS} )) && {
+    echo "error: failed to download udns!" 1>&2
+    exit 1
+  }
+}
+#tar xvf "$CWD/udns_${UDNS_VERSION}.tar.gz"
+tar xvf $CWD/udns[_-]${UDNS_VERSION}.tar.gz
+pushd "udns-${UDNS_VERSION}"
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure
+make shared
+cp udns.h "${PKG}/opt/dionaea/include/"
+cp *.so* "${PKG}/opt/dionaea/lib/"
+cd "${PKG}/opt/dionaea/lib"
+ln -s libudns.so.0 libudns.so
+popd
+
+# libemu
+rm -rf libemu
+git clone git://git.carnivore.it/libemu.git libemu
+pushd "libemu"
+chown -R root:root .
+find . \
+ \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+autoreconf -vi
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/opt/dionaea \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+popd
+
+# lxml
+(( ${WITH_LXML} )) && {
+  rm -rf "lxml-${LXML_VERSION}"
+  [ ! -f "${CWD}/lxml-${LXML_VERSION}.tgz" ] && {
+    pushd "${CWD}"
+    wget "${LXML_URL}"
+    popd
+  }
+  tar xvf "${CWD}/lxml-${LXML_VERSION}.tgz"
+  pushd "lxml-${LXML_VERSION}"
+  chown -R root:root .
+  find . \
+   \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+   -exec chmod 755 {} \; -o \
+   \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+   -exec chmod 644 {} \;
+  # fix some py3 issues with lxml
+  ${PYTHON3_PATH}/2to3 -w src/lxml/html/_diffcommand.py
+  ${PYTHON3_PATH}/2to3 -w src/lxml/html/_html5builder.py
+  
+  ${PYTHON3_PATH}/python3.1 setup.py build
+  ${PYTHON3_PATH}/python3.1 setup.py install --root=${PKG}
+  popd -n
+}
+
+# libnl
+(( ${WITH_LIBNL} )) && {
+  rm -rf "libnl"
+  git clone git://git.kernel.org/pub/scm/libs/netlink/libnl.git
+  pushd "libnl"
+  autoreconf -vi
+  export LDFLAGS=-Wl,-rpath,/opt/dionaea/lib
+  ./configure --prefix=/opt/dionaea
+  make
+  make install DESTDIR=${PKG}
+  unset LDFLAGS
+  popd
+}
+
+# Copy the slack-desc (and a custom doinst.sh if necessary) into ./install
+mkdir -p "${PKG}/install"
+#cat $CWD/slack-desc > $PKG/install/slack-desc
+print_slack_desc 1>${PKG}/install/slack-desc
+
+# Make the package; be sure to leave it in $OUTPUT
+# If package symlinks need to be created during install *before*
+# your custom contents of doinst.sh runs, then add the -p switch to
+# the makepkg command below -- see makepkg(8) for details
+pushd "${PKG}"
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz}
+exit 0
