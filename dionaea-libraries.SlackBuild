@@ -6,7 +6,7 @@
 # if you build with lxml, make sure you have python3 installed
 # i recommend getting the SlackBuild from http://slackbuilds.org/
 
-# last modified:	2011 Jan 13
+# last modified:	2011 Jan 14
 
 # this script tries to follow the dionaea installation
 # instructions as close as possible, instructions available at:
@@ -19,6 +19,7 @@
 #    * libemu, libemu.carnivore.it
 #    * lxml >=2.2.4, codespeak.net
 #    * libudns, corpit.ru
+#    * libnl
 
 # Written by pyllyukko - http://maimed.org/~pyllyukko/
 
@@ -51,8 +52,8 @@ PYTHON3_PATH="/usr/bin"
 # lxml is optional, but recommended
 # 0 = false, 1 = true
 WITH_LXML=1
-# libnl is also optional
-WITH_LIBNL=1
+# libnl is also optional (dionaea.SlackBuild doesn't even use it yet, so keep this to 0 for now)
+WITH_LIBNL=0
 
 # python3 is only required when you build with lxml
 (( ${WITH_LXML} )) && [ ! -x "${PYTHON3_PATH}/python3.1" ] && {
@@ -80,7 +81,9 @@ fi
 
 function print_slack_desc() {
   local LXML_LINE
+  local LIBNL_LINE
   (( ${WITH_LXML} )) && LXML_LINE="   - lxml (a Pythonic binding for the libxml2 and libxslt)" || LXML_LINE=""
+  (( ${WITH_LIBNL} )) && LIBNL_LINE="   - libnl" || LIBNL_LINE=""
   cat 0<<-EOF
 	# HOW TO EDIT THIS FILE:
 	# The "handy ruler" below makes it easier to edit a package description.  Line
@@ -98,7 +101,7 @@ function print_slack_desc() {
 	dionaea-libraries:   - libudns (stub DNS resolver library)
 	dionaea-libraries:   - libemu (library for basic x86 emulation)
 	dionaea-libraries:${LXML_LINE}
-	dionaea-libraries:
+	dionaea-libraries:${LIBNL_LINE}
 	dionaea-libraries: http://dionaea.carnivore.it/
 	dionaea-libraries:
 EOF
