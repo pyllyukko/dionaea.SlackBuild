@@ -16,7 +16,7 @@
 # TODO:
 #   - figure out a way to include *.pyc (bytecode compiled by the python interpreter)
 #     files inside the package, they are generated when dionaea is started
-#   - 
+#   - make $VERSION the actual git revision, not current date
 
 PRGNAM=dionaea
 VERSION=${VERSION:-`date +%Y%m%d`}
@@ -58,6 +58,7 @@ cd $TMP
 rm -rfv $PRGNAM
 git clone git://git.carnivore.it/dionaea.git $PRGNAM
 cd $PRGNAM
+GIT_REV=`git rev-parse --verify HEAD`
 chown -R root:root .
 find . \
  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
@@ -102,7 +103,7 @@ mv -v "${PKG}/opt/${PRGNAM}/etc/${PRGNAM}/${PRGNAM}.conf" "${PKG}/opt/${PRGNAM}/
 # Also, include the SlackBuild script in the documentation directory
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a \
-  README \
+  LICENSE README \
   $PKG/usr/doc/$PRGNAM-$VERSION
 cp -R -v modules/python/util ${PKG}/usr/doc/$PRGNAM-$VERSION
 cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
@@ -141,9 +142,9 @@ cat 0<<-EOF 1>${PKG}/install/slack-desc
 	       |-----handy-ruler------------------------------------------------------|
 	dionaea: dionaea (a low interaction honeypot)
 	dionaea:
-	dionaea:
-	dionaea:
-	dionaea:
+	dionaea: Dionaea is meant to be a Nepenthes successor, embedding Python 
+	dionaea: as scripting language, using libemu to detect 
+	dionaea: shellcodes, supporting IPv6 and TLS.
 	dionaea:
 	dionaea:
 	dionaea:
