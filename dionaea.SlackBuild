@@ -6,9 +6,17 @@
 # before building, make sure you have at least python3 and cython installed
 # i recommend getting the SlackBuilds from http://slackbuilds.org/
 
-# last modified:	2011 Jan 19
+# last modified:	2011 Feb 05
 
 # Written by pyllyukko - http://maimed.org/~pyllyukko/
+
+# NOTES:
+#   - dionaea will install under /opt/dionaea
+
+# TODO:
+#   - figure out a way to include *.pyc (bytecode compiled by the python interpreter)
+#     files inside the package, they are generated when dionaea is started
+#   - 
 
 PRGNAM=dionaea
 VERSION=${VERSION:-`date +%Y%m%d`}
@@ -56,11 +64,6 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
-
-# Your application will probably need different configure flags;
-# these are provided as an example only.
-# Be sure to build only shared libraries unless there's some need for
-# static.
 
 # Slackware 13.1 comes with libnl 1.1 and dionaea would need 2.0 series,
 # which has incompatible API. Since libnl IS optional, we'll just skip it
