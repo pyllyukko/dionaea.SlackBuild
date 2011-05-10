@@ -6,7 +6,7 @@
 # before building, make sure you have at least python3 and cython installed
 # i recommend getting the SlackBuilds from http://slackbuilds.org/
 
-# last modified:	2011 Feb 05
+# last modified:	2011 May 09
 
 # Written by pyllyukko - http://maimed.org/~pyllyukko/
 
@@ -16,15 +16,17 @@
 # TODO:
 #   - figure out a way to include *.pyc (bytecode compiled by the python interpreter)
 #     files inside the package, they are generated when dionaea is started
+#     - opt/dionaea/lib/dionaea could be completely removed after uninstall?
 #   - make $VERSION the actual git revision, not current date
+#     - if $VERSION empty, use latest from git, otherwise checkout that revision
 
 PRGNAM=dionaea
 VERSION=${VERSION:-`date +%Y%m%d`}
 ARCH=${ARCH:-i486}
 BUILD=${BUILD:-1}
 
-# path where python3.1 resides
-# python3.SlackBuild from SBo defaults to /usr/bin/python3.1
+# path where python3.2 resides
+# python3.SlackBuild from SBo defaults to /usr/bin/python3.2
 PYTHON3_PATH="/usr/bin"
 
 CWD=$(pwd)
@@ -32,8 +34,8 @@ TMP=${TMP:-/tmp/dionaea}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}	# Drop the package in /tmp
 
-[ ! -x "${PYTHON3_PATH}/python3.1" ] && {
-  echo "error: \`${PYTHON3_PATH}/python3.1' does not exist, or is not executable!"
+[ ! -x "${PYTHON3_PATH}/python3.2" ] && {
+  echo "error: \`${PYTHON3_PATH}/python3.2' does not exist, or is not executable!"
   echo "       if you have python3 installed somewhere else, please change the"	
   echo "       PYTHON3_PATH variable accordingly."
   exit 1
@@ -58,6 +60,8 @@ cd $TMP
 rm -rfv $PRGNAM
 git clone git://git.carnivore.it/dionaea.git $PRGNAM
 cd $PRGNAM
+#git checkout 85da727
+#git checkout e727d26f
 GIT_REV=`git rev-parse --verify HEAD`
 chown -R root:root .
 find . \
@@ -65,6 +69,11 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
+
+# configure notes:
+
+# we're trying to conform with FHS 2.3 by using /var/opt/dionaea as localstatedir
+# instead of the default /opt/dionaea/var/...
 
 # Slackware 13.1 comes with libnl 1.1 and dionaea would need 2.0 series,
 # which has incompatible API. Since libnl IS optional, we'll just skip it
@@ -77,7 +86,7 @@ autoreconf -vi
   --localstatedir=/var/opt/dionaea \
   --with-lcfg-include=/opt/dionaea/include/ \
   --with-lcfg-lib=/opt/dionaea/lib/ \
-  --with-python=${PYTHON3_PATH}/python3.1 \
+  --with-python=${PYTHON3_PATH}/python3.2 \
   --with-cython-dir=/usr/bin \
   --with-udns-include=/opt/dionaea/include/ \
   --with-udns-lib=/opt/dionaea/lib/ \
@@ -107,8 +116,14 @@ cp -a \
   $PKG/usr/doc/$PRGNAM-$VERSION
 cp -R -v modules/python/util ${PKG}/usr/doc/$PRGNAM-$VERSION
 cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+# sp tool, if available
+[ -f "${CWD}/sp" ] && {
+  mkdir -p "${PKG}/usr/doc/${PRGNAM}-${VERSION}/util"
+  cp -v "${CWD}/sp" "${PKG}/usr/doc/${PRGNAM}-${VERSION}/util"
+}
 
 # some stuff for the etc
+# logrotate from http://dionaea.carnivore.it/#configuration
 mkdir -p ${PKG}/etc/{rc.d,logrotate.d}
 cat 0<<-EOF 1>${PKG}/etc/logrotate.d/dionaea
 	# logrotate requires dionaea to be started with a pidfile
@@ -173,10 +188,7 @@ cat 0<<-EOF 1>${PKG}/install/doinst.sh
 	( cd opt/dionaea/lib/dionaea/python/dionaea ; ln -sfv /opt/dionaea/lib/dionaea/python.so core.so )
 EOF
 
-# Make the package; be sure to leave it in $OUTPUT
-# If package symlinks need to be created during install *before*
-# your custom contents of doinst.sh runs, then add the -p switch to
-# the makepkg command below -- see makepkg(8) for details
+# Make the package
 cd $PKG
 /sbin/makepkg -l n -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz}
 exit 0

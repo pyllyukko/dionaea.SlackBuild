@@ -5,30 +5,37 @@
 #
 # if you build with lxml, make sure you have python3 installed
 # i recommend getting the SlackBuild from http://slackbuilds.org/
+#
+# NOTE: (10.5.2011): dionaea currently requires python 3.2!
 
-# last modified:	2011 Jan 14
+# last modified:	2011 May 10
 
 # this script tries to follow the dionaea installation
 # instructions as close as possible, instructions available at:
 # http://dionaea.carnivore.it/#compiling
 
+# all the libraries are installed under /opt/dionaea
+
 # all the libraries will be downloaded if necessary
 # this package contains the following libraries:
-#    * libev >=3.80, schmorp.de
-#    * liblcfg, liblcfg.carnivore.it
-#    * libemu, libemu.carnivore.it
-#    * lxml >=2.2.4, codespeak.net
-#    * libudns, corpit.ru
-#    * libnl
+#
+#    library	version		condition
+#    * libev	$LIBEV_VERSION
+#    * liblcfg	git HEAD
+#    * libemu	git HEAD
+#    * lxml	$LXML_VERSION	if (( $WITH_LXML ))
+#    * libudns	$UDNS_VERSION
+#    * libnl	git HEAD	if (( $WITH_LIBNL ))
 
 # Written by pyllyukko - http://maimed.org/~pyllyukko/
 
 PRGNAM="dionaea-libraries"
+# the versions vary, so we stick with current date as version.
 VERSION=${VERSION:-`date +%Y%m%d`}
 ARCH=${ARCH:-i486}
 BUILD=${BUILD:-1}
 
-LIBEV_VERSION="3.9"
+LIBEV_VERSION="4.04"
 LIBEV_URLS=(
   "http://dist.schmorp.de/libev/libev-${LIBEV_VERSION}.tar.gz"
   "http://dist.schmorp.de/libev/Attic/libev-${LIBEV_VERSION}.tar.gz"
@@ -42,10 +49,15 @@ UDNS_URLS=(
   "http://www.corpit.ru/mjt/udns/old/udns-${UDNS_VERSION}.tar.gz"
 )
 GOT_UDNS=0
-LXML_VERSION="2.2.6"
-LXML_URL="http://codespeak.net/lxml/lxml-${LXML_VERSION}.tgz"
+# lxml - http://lxml.de/build.html
+# 10.5.2011: switched to version 2.3.
+#            the 2.2.6 version recommended at carnivore.it refused to compile.
+#LXML_VERSION="2.2.6"
+LXML_VERSION="2.3"
+#LXML_URL="http://codespeak.net/lxml/lxml-${LXML_VERSION}.tgz"
+LXML_URL="http://lxml.de/files/lxml-${LXML_VERSION}.tgz"
 
-# path where python3.1 resides
+# path where python3.2 resides
 # python3.SlackBuild from SBo defaults to /usr/bin
 PYTHON3_PATH="/usr/bin"
 
@@ -56,8 +68,8 @@ WITH_LXML=1
 WITH_LIBNL=0
 
 # python3 is only required when you build with lxml
-(( ${WITH_LXML} )) && [ ! -x "${PYTHON3_PATH}/python3.1" ] && {
-  echo "error: \`${PYTHON3_PATH}/python3.1' does not exist, or is not executable!"
+(( ${WITH_LXML} )) && [ ! -x "${PYTHON3_PATH}/python3.2" ] && {
+  echo "error: \`${PYTHON3_PATH}/python3.2' does not exist, or is not executable!"
   echo "       if you have python3 installed somewhere else, please change the"	
   echo "       PYTHON3_PATH variable accordingly."
   exit 1
@@ -82,7 +94,7 @@ fi
 function print_slack_desc() {
   local LXML_LINE
   local LIBNL_LINE
-  (( ${WITH_LXML} )) && LXML_LINE="   - lxml (a Pythonic binding for the libxml2 and libxslt)" || LXML_LINE=""
+  (( ${WITH_LXML} )) && LXML_LINE="   - lxml	(a Pythonic binding for the libxml2 and libxslt)" || LXML_LINE=""
   (( ${WITH_LIBNL} )) && LIBNL_LINE="   - libnl" || LIBNL_LINE=""
   cat 0<<-EOF
 	# HOW TO EDIT THIS FILE:
@@ -96,10 +108,10 @@ function print_slack_desc() {
 	dionaea-libraries: dionaea-libraries (dionaea dependencies)
 	dionaea-libraries:
 	dionaea-libraries: this package includes the following libraries:
-	dionaea-libraries:   - liblcfg (lightweight configuration file library)
-	dionaea-libraries:   - libev (high-performance event loop/event model)
-	dionaea-libraries:   - libudns (stub DNS resolver library)
-	dionaea-libraries:   - libemu (library for basic x86 emulation)
+	dionaea-libraries:   - liblcfg	(lightweight configuration file library)
+	dionaea-libraries:   - libev	(high-performance event loop/event model)
+	dionaea-libraries:   - libudns	(stub DNS resolver library)
+	dionaea-libraries:   - libemu	(library for basic x86 emulation)
 	dionaea-libraries:${LXML_LINE}
 	dionaea-libraries:${LIBNL_LINE}
 	dionaea-libraries: http://dionaea.carnivore.it/
@@ -134,6 +146,7 @@ CXXFLAGS="$SLKCFLAGS" \
 make
 make install DESTDIR=$PKG
 popd
+# /liblcfg
 
 # libev
 rm -rf "libev-${LIBEV_VERSION}"
@@ -173,6 +186,7 @@ CXXFLAGS="$SLKCFLAGS" \
 make
 make install DESTDIR=$PKG
 popd
+# /libev
 
 # libudns
 rm -rf "udns-${UDNS_VERSION}"
@@ -214,6 +228,7 @@ cp *.so* "${PKG}/opt/dionaea/lib/"
 cd "${PKG}/opt/dionaea/lib"
 ln -s libudns.so.0 libudns.so
 popd
+# /libudns
 
 # libemu
 rm -rf libemu
@@ -234,6 +249,7 @@ CXXFLAGS="$SLKCFLAGS" \
 make
 make install DESTDIR=$PKG
 popd
+# /libemu
 
 # lxml
 (( ${WITH_LXML} )) && {
@@ -255,10 +271,11 @@ popd
   ${PYTHON3_PATH}/2to3 -w src/lxml/html/_diffcommand.py
   ${PYTHON3_PATH}/2to3 -w src/lxml/html/_html5builder.py
   
-  ${PYTHON3_PATH}/python3.1 setup.py build
-  ${PYTHON3_PATH}/python3.1 setup.py install --root=${PKG}
+  ${PYTHON3_PATH}/python3.2 setup.py build
+  ${PYTHON3_PATH}/python3.2 setup.py install --root=${PKG}
   popd -n
 }
+# /lxml
 
 # libnl
 (( ${WITH_LIBNL} )) && {
@@ -273,16 +290,14 @@ popd
   unset LDFLAGS
   popd
 }
+# /libnl
 
 # Copy the slack-desc (and a custom doinst.sh if necessary) into ./install
 mkdir -p "${PKG}/install"
 #cat $CWD/slack-desc > $PKG/install/slack-desc
 print_slack_desc 1>${PKG}/install/slack-desc
 
-# Make the package; be sure to leave it in $OUTPUT
-# If package symlinks need to be created during install *before*
-# your custom contents of doinst.sh runs, then add the -p switch to
-# the makepkg command below -- see makepkg(8) for details
+# Make the package
 pushd "${PKG}"
 /sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz}
 exit 0
