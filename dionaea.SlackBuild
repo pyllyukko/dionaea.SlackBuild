@@ -6,7 +6,7 @@
 # before building, make sure you have at least python3 and cython installed
 # i recommend getting the SlackBuilds from http://slackbuilds.org/
 
-# last modified:	2011 May 09
+# last modified:	2011 May 12
 
 # Written by pyllyukko - http://maimed.org/~pyllyukko/
 
@@ -28,6 +28,9 @@ BUILD=${BUILD:-1}
 # path where python3.2 resides
 # python3.SlackBuild from SBo defaults to /usr/bin/python3.2
 PYTHON3_PATH="/usr/bin"
+#CYTHON_DIR="/usr/bin"
+CYTHON_DIR="/opt/dionaea/bin"
+export PYTHONPATH="/opt/dionaea/lib/python3.2/site-packages"
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp/dionaea}
@@ -87,7 +90,7 @@ autoreconf -vi
   --with-lcfg-include=/opt/dionaea/include/ \
   --with-lcfg-lib=/opt/dionaea/lib/ \
   --with-python=${PYTHON3_PATH}/python3.2 \
-  --with-cython-dir=/usr/bin \
+  --with-cython-dir=${CYTHON_DIR} \
   --with-udns-include=/opt/dionaea/include/ \
   --with-udns-lib=/opt/dionaea/lib/ \
   --with-emu-include=/opt/dionaea/include/ \

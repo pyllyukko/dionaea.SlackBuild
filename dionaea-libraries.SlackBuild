@@ -8,7 +8,7 @@
 #
 # NOTE: (10.5.2011): dionaea currently requires python 3.2!
 
-# last modified:	2011 May 10
+# last modified:	2011 May 11
 
 # this script tries to follow the dionaea installation
 # instructions as close as possible, instructions available at:
@@ -60,16 +60,18 @@ LXML_URL="http://lxml.de/files/lxml-${LXML_VERSION}.tgz"
 # path where python3.2 resides
 # python3.SlackBuild from SBo defaults to /usr/bin
 PYTHON3_PATH="/usr/bin"
+PYTHON3_BIN="python3.2"
 
 # lxml is optional, but recommended
 # 0 = false, 1 = true
 WITH_LXML=1
 # libnl is also optional (dionaea.SlackBuild doesn't even use it yet, so keep this to 0 for now)
 WITH_LIBNL=0
+WITH_CYTHON_GIT=1
 
 # python3 is only required when you build with lxml
-(( ${WITH_LXML} )) && [ ! -x "${PYTHON3_PATH}/python3.2" ] && {
-  echo "error: \`${PYTHON3_PATH}/python3.2' does not exist, or is not executable!"
+(( ${WITH_LXML} )) && [ ! -x "${PYTHON3_PATH}/${PYTHON3_BIN}" ] && {
+  echo "error: \`${PYTHON3_PATH}/${PYTHON3_BIN}' does not exist, or is not executable!"
   echo "       if you have python3 installed somewhere else, please change the"	
   echo "       PYTHON3_PATH variable accordingly."
   exit 1
@@ -271,8 +273,8 @@ popd
   ${PYTHON3_PATH}/2to3 -w src/lxml/html/_diffcommand.py
   ${PYTHON3_PATH}/2to3 -w src/lxml/html/_html5builder.py
   
-  ${PYTHON3_PATH}/python3.2 setup.py build
-  ${PYTHON3_PATH}/python3.2 setup.py install --root=${PKG}
+  ${PYTHON3_PATH}/${PYTHON3_BIN} setup.py build
+  ${PYTHON3_PATH}/${PYTHON3_BIN} setup.py install --root=${PKG}
   popd -n
 }
 # /lxml
@@ -291,6 +293,15 @@ popd
   popd
 }
 # /libnl
+
+# bleeding edge cython
+(( ${WITH_CYTHON_GIT} )) && {
+  rm -rf "cython"
+  git clone https://github.com/cython/cython.git
+  pushd "cython"
+  ${PYTHON3_PATH}/${PYTHON3_BIN} setup.py install --root=${PKG} --prefix=/opt/dionaea
+  popd
+}
 
 # Copy the slack-desc (and a custom doinst.sh if necessary) into ./install
 mkdir -p "${PKG}/install"
