@@ -8,7 +8,7 @@
 #
 # NOTE: (10.5.2011): dionaea currently requires python 3.2!
 
-# last modified:	2011 May 11
+# last modified:	2011 May 29
 
 # this script tries to follow the dionaea installation
 # instructions as close as possible, instructions available at:
@@ -29,6 +29,8 @@
 
 # Written by pyllyukko - http://maimed.org/~pyllyukko/
 
+umask 022
+
 PRGNAM="dionaea-libraries"
 # the versions vary, so we stick with current date as version.
 VERSION=${VERSION:-`date +%Y%m%d`}
@@ -41,7 +43,10 @@ LIBEV_URLS=(
   "http://dist.schmorp.de/libev/Attic/libev-${LIBEV_VERSION}.tar.gz"
 )
 GOT_LIBEV=0
-UDNS_VERSION="0.1"
+# current stable version (29.5.2011) is 0.1,
+# but http://dionaea.carnivore.it/#install_udns has 0.0.9, so we'll use that.
+#UDNS_VERSION="0.1"
+UDNS_VERSION="0.0.9"
 UDNS_URLS=(
   "http://www.corpit.ru/mjt/udns/udns_${UDNS_VERSION}.tar.gz"
   "http://www.corpit.ru/mjt/udns/udns-${UDNS_VERSION}.tar.gz"
@@ -52,9 +57,7 @@ GOT_UDNS=0
 # lxml - http://lxml.de/build.html
 # 10.5.2011: switched to version 2.3.
 #            the 2.2.6 version recommended at carnivore.it refused to compile.
-#LXML_VERSION="2.2.6"
 LXML_VERSION="2.3"
-#LXML_URL="http://codespeak.net/lxml/lxml-${LXML_VERSION}.tgz"
 LXML_URL="http://lxml.de/files/lxml-${LXML_VERSION}.tgz"
 
 # path where python3.2 resides
@@ -67,6 +70,7 @@ PYTHON3_BIN="python3.2"
 WITH_LXML=1
 # libnl is also optional (dionaea.SlackBuild doesn't even use it yet, so keep this to 0 for now)
 WITH_LIBNL=0
+# get fresh Cython git checkout and install under /opt?
 WITH_CYTHON_GIT=1
 
 # python3 is only required when you build with lxml
@@ -123,6 +127,13 @@ EOF
 } # print_slack-desc()
 
 set -e # Exit on most errors
+
+cat 0<<-EOF
+	${0##*/}:
+	  libev version:	${LIBEV_VERSION}
+	  udns version:		${UDNS_VERSION}
+	  lxml version:		${LXML_VERSION}
+EOF
 
 rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
