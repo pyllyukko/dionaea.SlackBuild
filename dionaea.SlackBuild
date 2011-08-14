@@ -28,8 +28,8 @@ BUILD=${BUILD:-1}
 # path where python3.2 resides
 # python3.SlackBuild from SBo defaults to /usr/bin/python3.2
 PYTHON3_PATH="/usr/bin"
-#CYTHON_DIR="/usr/bin"
-CYTHON_DIR="/opt/dionaea/bin"
+CYTHON_DIR="/usr/bin"
+#CYTHON_DIR="/opt/dionaea/bin"
 
 # we need this if Cython is installed under /opt
 export PYTHONPATH="/opt/dionaea/lib/python3.2/site-packages"
