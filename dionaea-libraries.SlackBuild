@@ -193,6 +193,8 @@ find . \
  -exec chmod 644 {} \;
 # TESTING
 #autoreconf -vi
+# thanks, Eric.
+# https://www.linuxquestions.org/questions/slackware-14/libtool-m4-and-ltmain-sh-version-mismatch-602538/#post2971513
 autoreconf -vfis
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
