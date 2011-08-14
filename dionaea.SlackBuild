@@ -80,7 +80,7 @@ find . \
 # we're trying to conform with FHS 2.3 by using /var/opt/dionaea as localstatedir
 # instead of the default /opt/dionaea/var/...
 
-# Slackware 13.1 comes with libnl 1.1 and dionaea would need 2.0 series,
+# Slackware 13.{1,37} comes with libnl 1.1 and dionaea would need 2.0 series,
 # which has incompatible API. Since libnl IS optional, we'll just skip it
 # for now.
 

@@ -37,11 +37,13 @@ VERSION=${VERSION:-`date +%Y%m%d`}
 ARCH=${ARCH:-i486}
 BUILD=${BUILD:-1}
 
-LIBEV_VERSION="4.04"
-LIBEV_URLS=(
-  "http://dist.schmorp.de/libev/libev-${LIBEV_VERSION}.tar.gz"
-  "http://dist.schmorp.de/libev/Attic/libev-${LIBEV_VERSION}.tar.gz"
-)
+LIBEV_VERSION="4.00"
+#LIBEV_URLS=(
+#  "http://dist.schmorp.de/libev/libev-${LIBEV_VERSION}.tar.gz"
+#  "http://dist.schmorp.de/libev/Attic/libev-${LIBEV_VERSION}.tar.gz"
+#)
+# according to http://dist.schmorp.de/libev/README, we should always use the Attic URL
+LIBEV_URL="http://dist.schmorp.de/libev/Attic/libev-${LIBEV_VERSION}.tar.gz"
 GOT_LIBEV=0
 # current stable version (29.5.2011) is 0.1,
 # but http://dionaea.carnivore.it/#install_udns has 0.0.9, so we'll use that.
@@ -71,7 +73,7 @@ WITH_LXML=1
 # libnl is also optional (dionaea.SlackBuild doesn't even use it yet, so keep this to 0 for now)
 WITH_LIBNL=0
 # get fresh Cython git checkout and install under /opt?
-WITH_CYTHON_GIT=1
+WITH_CYTHON_GIT=0
 
 # python3 is only required when you build with lxml
 (( ${WITH_LXML} )) && [ ! -x "${PYTHON3_PATH}/${PYTHON3_BIN}" ] && {
@@ -165,16 +167,16 @@ popd
 rm -rf "libev-${LIBEV_VERSION}"
 [ ! -f "${CWD}/libev-${LIBEV_VERSION}.tar.gz" ] && {
   pushd "${CWD}"
-  set +e
-  for LIBEV_URL in ${LIBEV_URLS[*]}
-  do
+  #set +e
+  #for LIBEV_URL in ${LIBEV_URLS[*]}
+  #do
     wget "${LIBEV_URL}" 
     [ ${?} -eq 0 ] && {
       GOT_LIBEV=1
       break
     }
-  done
-  set -e
+  #done
+  #set -e
   popd
   (( ! ${GOT_LIBEV} )) && {
     echo "error: failed to download libev!" 1>&2
@@ -189,13 +191,16 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
-autoreconf -vi
+# TESTING
+#autoreconf -vi
+autoreconf -vfis
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/opt/dionaea \
   --mandir=/usr/man \
   --build=$ARCH-slackware-linux
+# 14.8.2011: NOTE: libev doesn't compile with libtool 1.5.26
 make
 make install DESTDIR=$PKG
 popd
@@ -281,8 +286,8 @@ popd
    \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
    -exec chmod 644 {} \;
   # fix some py3 issues with lxml
-  ${PYTHON3_PATH}/2to3 -w src/lxml/html/_diffcommand.py
-  ${PYTHON3_PATH}/2to3 -w src/lxml/html/_html5builder.py
+  ${PYTHON3_PATH}/2to3-3.2 -w src/lxml/html/_diffcommand.py
+  ${PYTHON3_PATH}/2to3-3.2 -w src/lxml/html/_html5builder.py
   
   ${PYTHON3_PATH}/${PYTHON3_BIN} setup.py build
   ${PYTHON3_PATH}/${PYTHON3_BIN} setup.py install --root=${PKG}
