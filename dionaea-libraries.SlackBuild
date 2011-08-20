@@ -10,8 +10,12 @@
 #
 # NOTE: (14.8.2011): for whatever reason, i've had best results running dionaea
 # with slackware 12.2 and problems with 13.{1,37}
+#
+# NOTE: (21.8.2011): currently working setup:
+#   - python 3.2.1
+#   - Cython 0.15
 
-# last modified:	2011 Aug 14
+# last modified:	2011 Aug 20
 
 # this script tries to follow the dionaea installation
 # instructions as close as possible, instructions available at:
