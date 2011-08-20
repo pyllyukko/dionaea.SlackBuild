@@ -7,12 +7,18 @@
 # i recommend getting the SlackBuild from http://slackbuilds.org/
 #
 # NOTE: (10.5.2011): dionaea currently requires python 3.2!
+#
+# NOTE: (14.8.2011): for whatever reason, i've had best results running dionaea
+# with slackware 12.2 and problems with 13.{1,37}
 
-# last modified:	2011 May 29
+# last modified:	2011 Aug 14
 
 # this script tries to follow the dionaea installation
 # instructions as close as possible, instructions available at:
 # http://dionaea.carnivore.it/#compiling
+#
+# similar script/instructions are also available at:
+# http://ids.surfnet.nl/downloads/build_dionaea.txt
 
 # all the libraries are installed under /opt/dionaea
 
@@ -37,7 +43,7 @@ VERSION=${VERSION:-`date +%Y%m%d`}
 ARCH=${ARCH:-i486}
 BUILD=${BUILD:-1}
 
-LIBEV_VERSION="4.00"
+LIBEV_VERSION="4.04"
 #LIBEV_URLS=(
 #  "http://dist.schmorp.de/libev/libev-${LIBEV_VERSION}.tar.gz"
 #  "http://dist.schmorp.de/libev/Attic/libev-${LIBEV_VERSION}.tar.gz"
@@ -70,9 +76,11 @@ PYTHON3_BIN="python3.2"
 # lxml is optional, but recommended
 # 0 = false, 1 = true
 WITH_LXML=1
-# libnl is also optional (dionaea.SlackBuild doesn't even use it yet, so keep this to 0 for now)
+# libnl is also optional (dionaea.SlackBuild doesn't even use it yet, so keep
+# this to 0 for now)
 WITH_LIBNL=0
 # get fresh Cython git checkout and install under /opt?
+# NOTE (14.8.2011): cython 0.15 should work currently, so this isn't necessary
 WITH_CYTHON_GIT=0
 
 # python3 is only required when you build with lxml
@@ -191,10 +199,9 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
-# TESTING
-#autoreconf -vi
 # thanks, Eric.
 # https://www.linuxquestions.org/questions/slackware-14/libtool-m4-and-ltmain-sh-version-mismatch-602538/#post2971513
+#autoreconf -vi
 autoreconf -vfis
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -202,7 +209,6 @@ CXXFLAGS="$SLKCFLAGS" \
   --prefix=/opt/dionaea \
   --mandir=/usr/man \
   --build=$ARCH-slackware-linux
-# 14.8.2011: NOTE: libev doesn't compile with libtool 1.5.26
 make
 make install DESTDIR=$PKG
 popd
@@ -230,7 +236,6 @@ rm -rf "udns-${UDNS_VERSION}"
     exit 1
   }
 }
-#tar xvf "$CWD/udns_${UDNS_VERSION}.tar.gz"
 tar xvf $CWD/udns[_-]${UDNS_VERSION}.tar.gz
 pushd "udns-${UDNS_VERSION}"
 chown -R root:root .
