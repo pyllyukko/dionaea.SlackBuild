@@ -37,6 +37,9 @@ CYTHON_DIR="/usr/bin"
 # we need this if Cython is installed under /opt
 export PYTHONPATH="/opt/dionaea/lib/python3.2/site-packages"
 
+# where dionaea stores it's data
+LOCALSTATEDIR="/var/opt/dionaea"
+
 CWD=$(pwd)
 TMP=${TMP:-/tmp/dionaea}
 PKG=$TMP/package-$PRGNAM
@@ -91,7 +94,7 @@ autoreconf -vi
 #CFLAGS="$SLKCFLAGS" \
 #CXXFLAGS="$SLKCFLAGS" \
 ./configure \
-  --localstatedir=/var/opt/dionaea \
+  --localstatedir=${LOCALSTATEDIR} \
   --with-lcfg-include=/opt/dionaea/include/ \
   --with-lcfg-lib=/opt/dionaea/lib/ \
   --with-python=${PYTHON3_PATH}/python3.2 \
@@ -189,6 +192,9 @@ cat 0<<-EOF 1>${PKG}/install/doinst.sh
 	  fi
 	  # Otherwise, we leave the .new copy for the admin to consider...
 	}
+	# fix the paths in the config file
+	sed -i 's:"var/:"${LOCALSTATEDIR}/:' opt/dionaea/etc/dionaea/dionaea.conf.new
+
 	config opt/dionaea/etc/dionaea/dionaea.conf.new
 	( cd opt/dionaea/lib/dionaea/python/dionaea ; rm -rfv pyev.so )
 	( cd opt/dionaea/lib/dionaea/python/dionaea ; ln -sfv /opt/dionaea/lib/dionaea/python.so pyev.so )
