@@ -111,6 +111,11 @@ autoreconf -vi
 
 #cp -f -v ${CWD}/binding.c modules/python/binding.c
 # Compile the application and install it into the $PKG directory
+
+# 5.11.2012: temp fix for slack14.0:
+sed -i 's/^LIB_SSL_LIBS.*$/LIB_SSL_LIBS = -lssl -lcrypto/' Makefile
+sed -i 's/^LIB_SSL_LIBS.*$/LIB_SSL_LIBS = -lssl -lcrypto/' src/Makefile
+
 make
 make install DESTDIR=$PKG
 
