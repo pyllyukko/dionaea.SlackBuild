@@ -275,6 +275,7 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/opt/dionaea \
+  --mandir=/usr/man \
   --build=$ARCH-slackware-linux
 make
 make install DESTDIR=$PKG
