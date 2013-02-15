@@ -9,8 +9,6 @@
 # it might be required to change the "python setup.py install" in
 # Cython.SlackBuild to use "/usr/bin/python3.2".
 
-# last modified:	2011 May 12
-
 # Written by pyllyukko - http://maimed.org/~pyllyukko/
 
 # NOTES:

@@ -16,8 +16,6 @@
 #   - python 3.2.1
 #   - Cython 0.15
 
-# last modified:	2012 Aug 28
-
 # this script tries to follow the dionaea installation
 # instructions as close as possible, instructions available at:
 # http://dionaea.carnivore.it/#compiling
