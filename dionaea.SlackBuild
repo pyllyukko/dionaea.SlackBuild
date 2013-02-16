@@ -139,71 +139,13 @@ cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
 # some stuff for the etc
 # logrotate from http://dionaea.carnivore.it/#configuration
 mkdir -p ${PKG}/etc/{rc.d,logrotate.d}
-cat 0<<-EOF 1>${PKG}/etc/logrotate.d/dionaea
-	# logrotate requires dionaea to be started with a pidfile
-	# in this case -p /opt/dionaea/var/run/dionaea.pid
-	# adjust the path to your needs
-	#/opt/dionaea/var/log/dionaea*.log {
-        #	notifempty
-	#        missingok
-	#        rotate 28
-	#        daily
-	#        delaycompress
-	#        compress
-	#        create 660 root root
-	#        dateext
-	#        postrotate
-        #	        kill -HUP \`cat /opt/dionaea/var/run/dionaea.pid\`
-	#        endscript
-	#}
-EOF
+cat ${CWD}/dionaea.logrotate 1>${PKG}/etc/logrotate.d/dionaea
 
 # Copy the slack-desc (and a custom doinst.sh if necessary) into ./install
 mkdir -p $PKG/install
-cat 0<<-EOF 1>${PKG}/install/slack-desc
-	# HOW TO EDIT THIS FILE:
-	# The "handy ruler" below makes it easier to edit a package description.  Line
-	# up the first '|' above the ':' following the base package name, and the '|'
-	# on the right side marks the last column you can put a character in.  You must
-	# make exactly 11 lines for the formatting to be correct.  It's also
-	# customary to leave one space after the ':' except on otherwise blank lines.
-
-	       |-----handy-ruler------------------------------------------------------|
-	dionaea: dionaea (a low interaction honeypot)
-	dionaea:
-	dionaea: Dionaea is meant to be a Nepenthes successor, embedding Python 
-	dionaea: as scripting language, using libemu to detect 
-	dionaea: shellcodes, supporting IPv6 and TLS.
-	dionaea:
-	dionaea:
-	dionaea:
-	dionaea:
-	dionaea: http://dionaea.carnivore.it/
-	dionaea:
-EOF
+cat ${CWD}/slack-desc 1>${PKG}/install/slack-desc
 # ok this is kinda silly, but i wan't them all included in this one SlackBuild file
-cat 0<<-EOF 1>${PKG}/install/doinst.sh
-	config() {
-	  NEW="\$1"
-	  OLD="\$(dirname \$NEW)/\$(basename \$NEW .new)"
-	  # If there's no config file by that name, mv it over:
-	  if [ ! -r \$OLD ]; then
-	    mv \$NEW \$OLD
-	  elif [ "\$(cat \$OLD | md5sum)" = "\$(cat \$NEW | md5sum)" ]; then
-	    # toss the redundant copy
-	    rm \$NEW
-	  fi
-	  # Otherwise, we leave the .new copy for the admin to consider...
-	}
-	# fix the paths in the config file
-	sed -i 's:"var/:"${LOCALSTATEDIR}/:' opt/dionaea/etc/dionaea/dionaea.conf.new
-
-	config opt/dionaea/etc/dionaea/dionaea.conf.new
-	( cd opt/dionaea/lib/dionaea/python/dionaea ; rm -rfv pyev.so )
-	( cd opt/dionaea/lib/dionaea/python/dionaea ; ln -sfv /opt/dionaea/lib/dionaea/python.so pyev.so )
-	( cd opt/dionaea/lib/dionaea/python/dionaea ; rm -rfv core.so )
-	( cd opt/dionaea/lib/dionaea/python/dionaea ; ln -sfv /opt/dionaea/lib/dionaea/python.so core.so )
-EOF
+cat ${CWD}/doinst.sh 1>${PKG}/install/doinst.sh
 
 # Make the package
 cd $PKG
